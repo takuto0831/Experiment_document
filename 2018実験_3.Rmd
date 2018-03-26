@@ -40,6 +40,9 @@ library(xtable) # latexで表を出力
 library(knitr) # kable
 ```
 
+第三回では, ロジスティック回帰とサポートベクターマシーンについて実験を行う. 
+まず今回の基礎となる, ベイズの定理について復習する. 簡単に説明するが, もしわからない場合は必ず各自復習すること.
+
 # ベイズの定理について(復習) 
 
 事象$A$が起こるという条件の下で, $k$種類の事象$B$が起こるとする. このとき条件付き確率$P(B|A)$は次の式から求められる.
@@ -56,6 +59,27 @@ $$
 
 得られた式をベイズの定理と呼ぶ. ここで, $P(B)$を事前確率, $P(B|A)$を事後確率と呼ぶ. 解釈としては, もともと$B$が起きる確率は事前確率$P(B)$であったが, $A$が起きるという情報を得た元では事後確率$P(B|A)$と更新されると考える.
 
+## 条件付き確率に関する練習問題 {.tabset .tabset-fade}
+
+### 問題
+
+1から3の目が黄色で塗られており, 4から6の目は水色で塗られているさいころがある. このさいころを投げて水色の目が出た時, この目が偶数である確率を求めよ.
+
+### 解答
+
+水色の目が出る事象を$A$, 偶数の目が出る事象を$B$とすると, 求める確率は$P(B|A)$となる. $A\cap B$となる事象は出る目が$\{4,6\}$の場合なので,
+
+$$
+P(A \cap B) = \frac{2}{6}
+$$
+
+以上を用いて, 次のように確率を求める.
+
+$$
+P(B|A) = \frac{P(A \cap B)}{P(A)} = \frac{\frac{2}{6}}{\frac{3}{6}} = \frac{2}{3}
+$$
+
+
 # ロジスティック回帰
 
 線形識別関数$y = \bf{w}^T \bf{x}$は, 識別境界から離れるに従って線形に上昇する. ロジスティック回帰は, 関数値を区間(0,1)に制限し, 確率的な解釈を可能にする. 
@@ -64,32 +88,35 @@ $$
 $$
 P(C_1 | \bf{x} ) = \frac{ P( \bf{x} |C_1 ) P(C_1)}{P( \bf{x} |C_1 ) P(C_1) + P( \bf{x} |C_2) P(C_2) }
 $$
-であるが, 
+
+となる. ここで式の説明を行う. $P(C_1|\bf{x})$は任意のデータ$\bf{x}$の下での, クラス1に所属する確率.  $P(\bf{x}|C_1)$はクラス1に所属すると仮定した場合のデータの尤もらしさ(尤度)を表す. 
+
 $$
 a = \ln \frac{ P( \bf{x} |C_1 ) P(C_1)}{P( \bf{x} |C_2) P(C_2) }
 $$
+
 と置けば, 
+
 $$
 P(C_1 | \bf{x} ) =  \frac{1}{1 + \exp(-a)} = \sigma(a)
 $$
-と表すことができる. 関数$\sigma(a)$を\textbf{ロジスティック関数}と呼ぶ.
+と表すことができる. 関数$\sigma(a)$を$\textbf{ロジスティック関数}$と呼ぶ.
 
 事後確率の比をオッズ, その対数を対数オッズという. 
+
 $$
 a = \ln \frac{ P( \bf{x} |C_1 ) P(C_1)}{P( \bf{x} |C_2) P(C_2) }
 $$
 
-
 ## ピマ・インディアンデータのロジスティック回帰
 
-ピマ・インディアンデータとは7種の特徴と測定してから5年後に糖尿病を発症したか否かを表す.
+ピマ・インディアンデータとは7種の特徴と測定してから5年後に糖尿病を発症したか否かを表す. ７つの特徴と疾病の有無について関係性をプロットする.
 
-特徴:npreg, glu, bp, skin, bmi, ped, age, 結果:type(Yes or No)
-
-７つの特徴と疾病の有無の関係をプロットする.
+特徴:npreg, glu, bp, skin, bmi, ped, age, 結果:type(糖尿病を発症したor発症していない)
 
 ```{r logis.a}
 pairs(Pima.tr[,-8],pch=21, bg=c(109,34)[factor(Pima.tr$type)])
+# pch:プロットの形状, bg=109:青, bg=34:赤
 ```
 
 
@@ -97,10 +124,11 @@ pairs(Pima.tr[,-8],pch=21, bg=c(109,34)[factor(Pima.tr$type)])
 
 ```{r logis.b}
 logit.fit1 <- glm(type ~ npreg + glu + bp + skin + bmi + ped + age, family = "binomial", data=Pima.tr)
-summary(logit.fit1)
+summary(logit.fit1) 
+#Estimates:推定された各変数の係数パラメータ, AIC:情報量基準
 ```
 
-[glm関数について](https://www.marketechlabo.com/r-glm-libraries/)
+[glm関数についての説明ページ](https://www.marketechlabo.com/r-glm-libraries/)
 
 この出力結果から, 線形識別関数は
 
@@ -130,10 +158,10 @@ error.rate
 ```
 
 
-
 事後確率の値を変化させて, 識別境界を変化させたときのROCのプロット.
 
 ```{r logis.roc}
+#データ形成
 ROC_ <- data.frame(value=pred.logit,answer=Pima.tr$type)
 colnames(ROC_) <- c('value','answer')
 #出力値順に並べ替える
@@ -141,30 +169,33 @@ ROC_ <- ROC_[order(ROC_$value),]
 
 #そのままだと計算が面倒なのでNoを0 Yesを1に変形する
 levels(ROC_$answer) <- c(0,1)
-ROC_$answer <- ROC_$answer %>% as.character() %>% as.numeric()
+#"answer"列のデータをfactor形式からnumeric形式に変更する
+ROC_$answer <- ROC_$answer %>% 
+  as.character() %>% 
+  as.numeric()
+#0,1の個数を計測する
 table(ROC_$answer)
 
-#　最初にYesの人間が出現するところから
+#最初にYesの人間が出現するところから
 first <- which(ROC_$answer == 1)[1]
 ROC_ <- ROC_[first:200,]
 
-# 本当はYesで、閾値をずらしたときに、予測したなかで正しかった割合
-true_positive <- cumsum(ROC_$answer)/sum(ROC_$answer)
-ROC_$answer <- ROC_$answer -1
+#本当はYesで、閾値をずらしたときに、予測したなかで正しかった割合
+true_positive <- cumsum(ROC_$answer)/sum(ROC_$answer) #cumsum:累積和
+ROC_$answer <- ROC_$answer - 1
+# 予測が正しくない割合
 false_positive <- cumsum(ROC_$answer) / sum(ROC_$answer)
+
+# 予測が正しい割合と正しくない割合のデータでデータフレームを形成する.
 plot_d <- data.frame(true_positive = true_positive,false_positive = false_positive)
-ggplot(plot_d,aes(x=true_positive,y=false_positive))+geom_line()+theme_bw()
-
+ggplot(plot_d, aes(x=true_positive,y=false_positive)) + # ggplotはデータ, x軸, y軸を指定する
+  geom_line() + # x軸, y軸を元に直線を引く
+  theme_bw() # おまけ
 ```
-
-
-
 
 ## 実行例6.4 非線形基底関数による変換とロジスティク回帰による識別
 
-
-ここでは, 2クラスのロジスティック回帰を用いて非線形基底関数の効用を示す。
-実行例6.3で, 2次元判別空間に写像されたアヤメデータをsetosaとvirginicaを１クラスにまとめて線形分離不可能な２クラス問題にし, ロジスティック回帰で求めた識別境界を示す. ロジスティック回帰では, 事後確率が0.5となる等高線が識別境界となる. 図からわかるように, 線形関数では精度良く分類することはできない.
+ここでは, 2クラスのロジスティック回帰を用いて非線形基底関数の効用を示す. 実行例6.3で, 2次元判別空間に写像されたアヤメデータをsetosaとvirginicaを１クラスにまとめて線形分離不可能な２クラス問題にし, ロジスティック回帰で求めた識別境界を示す. ロジスティック回帰では, 事後確率が0.5となる等高線が識別境界となる. 図からわかるように, 線形関数では精度良く分類することはできない.
 
 そこで非線形基底関数を使った非線形特徴写像を考える. 非線形特徴写像はいろいろなものが考えられるが, ここでは次のガウス核関数
 
@@ -174,14 +205,9 @@ $$
 
 を用いる.
 
-
-```{r ex6.4}
-print(6.4)
-```
-
 # サポートベクトルマシン
 
-サポートベクターマシンは, 最大マージンを実現する2クラス線形識別関数の学習法である.
+サポートベクターマシンは, 最大マージンを実現する2クラス線形識別関数の学習法である. 最大マージンとは, 学習データの中で最も他のクラスと近い位置にいるもの(サポートベクトル)を基準として, その二つのデータについて, それぞれユークリッド距離が夫も大きくなるような位置に識別境界を定めることである.
 
 クラスラベル付き学習データの集合を$\mathcal{D}_L = \{ (t_i, \bf{x}_i)\},~(i=1,\ldots, N)$とする. $t_i = \{ -1,1\}$は教師データであり, 学習データ$\bf{x} \in \mathcal{R}^d$がどちらのクラスに属するのかを指定する. 
 
@@ -192,6 +218,7 @@ $$
 $$
 
 が成り立つ. 係数ベクトルとバイアス項をマージン$\kappa$で正規化したものを改めて$\bf{w}$と$b$と置けば, 線形識別関数は
+
 $$
 \begin{aligned}
 t_i = +1~\textrm{の場合}, ~~~\bf{w}^T \bf{x}_i  + b \geq 1, \\
@@ -199,19 +226,21 @@ t_i = -1~\textrm{の場合}, ~~~\bf{w}^T \bf{x}_i  + b \leq -1
 \end{aligned}
 $$
 
-
 となる. この場合分けは$t_i( \bf{w}^T \bf{x}_i + b ) \geq 1$とまとめることができる. クラス間マージンは, 各クラスのデータを$\bf{w}$の方向へ射影した長さの差の最小値
 
+[クラス間マージンなどについて](https://www.slideshare.net/moa108/8-28571831)
+
 $$
-\rho (\bf{w}, b) = \min_{x \in C_{y =+1} } \frac{\bf{w}^T \bf{x}}{ \Vert  \bf{w} \Vert}
+\begin{eqnarray}
+\rho (\bf{w}, b) &=& \min_{x \in C_{y =+1} } \frac{\bf{w}^T \bf{x}}{ \Vert  \bf{w} \Vert}
 -
-\max_{x \in C_{y =-1} } \frac{\bf{w}^T \bf{x}}{ \Vert  \bf{w} \Vert}
-= \frac{2}{ \Vert  \bf{w} \Vert}
+\max_{x \in C_{y =-1} } \frac{\bf{w}^T \bf{x}}{ \Vert  \bf{w} \Vert} \\ 
+&=& \frac{1-b}{ \Vert  \bf{w} \Vert} + \frac{1+b}{ \Vert  \bf{w} \Vert} \\
+&=& \frac{2}{ \Vert  \bf{w} \Vert}
+\end{eqnarray}
 $$
 
 で与えられる. 最適な超平面の式を$\bf{w}_0^T\bf{x} + b_0=0$とすれば, この超平面は最大クラス間マージン$\rho(\bf{w}_0, b_0) = \max_{w} \rho(\bf{w},b)$を与える. 従って, 最適識別超平面は, $t_i(\bf{w}^T \bf{x}_i+ b)\geq 1$の制約下で, $\bf{w}$のノルムを最小にする解$\bf{w}_0 = \min  \Vert  \bf{w} \Vert$としてもとめることができる.
-
-
 
 `Pima.tr`との`glu`と`bmi`を用いた2次元データをSVMで識別してみよう. RBFカーネルを用いた結果を示す.
 動径基底関数の広がりを表すパラメータを$\sigma=0.2, 0.4, 0.8, 2.0,4.0$に設定し, $\alpha_i$の上限値を与えるパラメータ$C$の値値を変えたときの訓練誤差(学習データの再代入誤り率)と,  ホールドアウト法による汎化誤差を示している. （教科書と違います）　
