@@ -8,7 +8,9 @@ output:
     md_extensions: -ascii_identifiers
     number_sections: true
     theme: united
-    #code_folding: hide
+#output:
+ # ioslides_presentation:
+ # oc: true
 ---
 
 ```{r knitr_init, echo=FALSE, cache=FALSE}
@@ -40,8 +42,10 @@ library(xtable) # latexで表を出力
 library(knitr) # kable
 ```
 
+# 第三回の目的
+
 第三回では, ロジスティック回帰とサポートベクターマシーンについて実験を行う. 
-まず今回の基礎となる, ベイズの定理について復習する. 簡単に説明するが, もしわからない場合は必ず各自復習すること.
+今回の基礎となる, ベイズの定理および点と直線の距離の公式について復習する. 簡単に説明するが, もしわからない場合は必ず各自復習し理解した上でレポートに取り組むこと.
 
 # ベイズの定理について(復習) 
 
@@ -59,7 +63,7 @@ $$
 
 得られた式をベイズの定理と呼ぶ. ここで, $P(B)$を事前確率, $P(B|A)$を事後確率と呼ぶ. 解釈としては, もともと$B$が起きる確率は事前確率$P(B)$であったが, $A$が起きるという情報を得た元では事後確率$P(B|A)$と更新されると考える.
 
-## 条件付き確率に関する練習問題 {.tabset .tabset-fade}
+## 条件付き確率に関する問題 {.tabset .tabset-fade}
 
 ### 問題
 
@@ -78,7 +82,6 @@ $$
 $$
 P(B|A) = \frac{P(A \cap B)}{P(A)} = \frac{\frac{2}{6}}{\frac{3}{6}} = \frac{2}{3}
 $$
-
 
 # ロジスティック回帰
 
@@ -205,9 +208,37 @@ $$
 
 を用いる.
 
+# 点と直線の距離について(復習)
+
+2次元における直線$ax+by+c=0$と座標$(x_1,y_1)$の点と直線の距離は,
+
+$$
+d = \frac{|ax_1 + by_1 + c|}{\sqrt{a^2 + b^2}}
+$$
+
+で表される. 
+
+## 点と平面の距離の公式を求めよ{.tabset .tabset-fade}
+
+### 問題
+
+上述した点と直線の距離の公式を元に, 一般化して点と平面の距離の公式を求める.
+(ヒント: 係数ベクトル$\bf{w}$, 特徴ベクトル$\bf{x_i}$, バイアス項$b$とする)
+
+
+### 回答
+
+係数ベクトル$\bf{w}$, 特徴ベクトル$\bf{x_i}$, バイアス項$b$として, 
+
+$$
+d = \frac{|\bf{w}^T \bf{x_i} + b|}{ \Vert  \bf{w} \Vert}
+$$
+
+と表すことができる.
+
 # サポートベクトルマシン
 
-サポートベクターマシンは, 最大マージンを実現する2クラス線形識別関数の学習法である. 最大マージンとは, 学習データの中で最も他のクラスと近い位置にいるもの(サポートベクトル)を基準として, その二つのデータについて, それぞれユークリッド距離が夫も大きくなるような位置に識別境界を定めることである.
+サポートベクターマシンは, 最大マージンを実現する2クラス線形識別関数の学習法である. 最大マージンとは, 学習データの中で最も他のクラスと近い位置にいるもの(サポートベクトル)を基準として, その二つのデータについて, それぞれユークリッド距離が最も大きくなるような位置に識別境界を定めることである.
 
 クラスラベル付き学習データの集合を$\mathcal{D}_L = \{ (t_i, \bf{x}_i)\},~(i=1,\ldots, N)$とする. $t_i = \{ -1,1\}$は教師データであり, 学習データ$\bf{x} \in \mathcal{R}^d$がどちらのクラスに属するのかを指定する. 
 
@@ -217,7 +248,8 @@ $$
 | \bf{w}^T \bf{x}_i + b| \geq \kappa
 $$
 
-が成り立つ. 係数ベクトルとバイアス項をマージン$\kappa$で正規化したものを改めて$\bf{w}$と$b$と置けば, 線形識別関数は
+が成り立つ. ここで,先ほど示した点と平面の公式の分母である$\Vert  \bf{w} \Vert$は両辺にかけて消去している, その結果得られた値をマージン$\kappa$としている?
+係数ベクトルとバイアス項をマージン$\kappa$で正規化したものを改めて$\bf{w}$と$b$と置けば, 線形識別関数は
 
 $$
 \begin{aligned}
@@ -226,7 +258,7 @@ t_i = -1~\textrm{の場合}, ~~~\bf{w}^T \bf{x}_i  + b \leq -1
 \end{aligned}
 $$
 
-となる. この場合分けは$t_i( \bf{w}^T \bf{x}_i + b ) \geq 1$とまとめることができる. クラス間マージンは, 各クラスのデータを$\bf{w}$の方向へ射影した長さの差の最小値
+となる. この場合分けは$t_i( \bf{w}^T \bf{x}_i + b ) \geq 1$とまとめることができる. クラス間マージンは, 各クラスのデータを$\bf{w}$の方向へ射影した長さの差の最小値(つまり$t_i = +1$のとき$\bf{w}^T \bf{x}_i  + b = 1$となり, $t_i = -1$のとき$\bf{w}^T \bf{x}_i  + b = -1$となるとき)
 
 [クラス間マージンなどについて](https://www.slideshare.net/moa108/8-28571831)
 
@@ -235,20 +267,16 @@ $$
 \rho (\bf{w}, b) &=& \min_{x \in C_{y =+1} } \frac{\bf{w}^T \bf{x}}{ \Vert  \bf{w} \Vert}
 -
 \max_{x \in C_{y =-1} } \frac{\bf{w}^T \bf{x}}{ \Vert  \bf{w} \Vert} \\ 
-&=& \frac{1-b}{ \Vert  \bf{w} \Vert} + \frac{1+b}{ \Vert  \bf{w} \Vert} \\
+&=& \frac{1-b}{ \Vert  \bf{w} \Vert} - \frac{-1-b}{ \Vert  \bf{w} \Vert} \\
 &=& \frac{2}{ \Vert  \bf{w} \Vert}
 \end{eqnarray}
 $$
 
 で与えられる. 最適な超平面の式を$\bf{w}_0^T\bf{x} + b_0=0$とすれば, この超平面は最大クラス間マージン$\rho(\bf{w}_0, b_0) = \max_{w} \rho(\bf{w},b)$を与える. 従って, 最適識別超平面は, $t_i(\bf{w}^T \bf{x}_i+ b)\geq 1$の制約下で, $\bf{w}$のノルムを最小にする解$\bf{w}_0 = \min  \Vert  \bf{w} \Vert$としてもとめることができる.
 
-`Pima.tr`との`glu`と`bmi`を用いた2次元データをSVMで識別してみよう. RBFカーネルを用いた結果を示す.
-動径基底関数の広がりを表すパラメータを$\sigma=0.2, 0.4, 0.8, 2.0,4.0$に設定し, $\alpha_i$の上限値を与えるパラメータ$C$の値値を変えたときの訓練誤差(学習データの再代入誤り率)と,  ホールドアウト法による汎化誤差を示している. （教科書と違います）　
-
-
+`Pima.tr`との`glu`と`bmi`を用いた2次元データをSVMで識別してみる. RBFカーネルを用いた結果を示す. RBFカーネルにはコストパラメータ$C$とカーネルパラメータ$\sigma$が存在する.動径基底関数の広がりを表すパラメータを$\sigma=0.2, 0.4, 0.8, 2.0,4.0$に設定し, $\alpha_i$の上限値を与えるパラメータ$C$の値を変えたときの訓練誤差(学習データの再代入誤り率)と,  ホールドアウト法による汎化誤差を示している. （教科書と違います）　
 
 ## 実行例8.1 ピマ・インディアンデータデのSVMによる識別
-
 
 ```{r ex8.1.a}
 ## 動径基底関数を作成する. Create a kernel function using the build in rbfdot function
@@ -262,8 +290,8 @@ pima.model <- ksvm(type~ bmi+glu ,data=Pima.tr,type="C-svc",
 pima.model
 
 ## predict mail type on the test set
-pred.tr<- predict(pima.model) 
-pred.te <- predict(pima.model,Pima.te)
+pred.tr<- predict(pima.model) # 訓練データに対する実行
+pred.te <- predict(pima.model,Pima.te) #テストデータに対する実行
 
 ## 誤り率を計算する
 1-sum(diag(table ( pred.tr, Pima.tr$type) ))/200
@@ -275,17 +303,18 @@ plot(pima.model)
 
 
 ```{r ex8.1.b}
+#2つのパラメータを定める関数
 svm.rbf <-function(sig,Const){
-rbf <- rbfdot(sigma=sig)
-## train a bound constraint support vector machine
-pima.model <- ksvm(type~ bmi+glu ,data=Pima.tr,type="C-svc",
-                  kernel=rbf,C=Const,prob.model=TRUE)
-pred.tr<- predict(pima.model) 
-pred.te <- predict(pima.model,Pima.te)
-## 誤り率を計算する
-error.tr <- 1-sum(diag(table ( pred.tr, Pima.tr$type) ))/200
-error.te <- 1-sum(diag(table ( pred.te, Pima.te$type) ))/332
-return(list(error.te=error.te, error.tr = error.tr))
+  rbf <- rbfdot(sigma=sig)
+  ## train a bound constraint support vector machine
+  pima.model <- ksvm(type~ bmi+glu ,data=Pima.tr,type="C-svc",
+                     kernel=rbf,C=Const,prob.model=TRUE)
+  pred.tr<- predict(pima.model) 
+  pred.te <- predict(pima.model,Pima.te)
+  ## 誤り率を計算する
+  error.tr <- 1-sum(diag(table ( pred.tr, Pima.tr$type) ))/200
+  error.te <- 1-sum(diag(table ( pred.te, Pima.te$type) ))/332
+  return(list(error.te=error.te, error.tr = error.tr))
 }
 
 svm.rbf(sig=0.4,Const=1)
@@ -297,6 +326,9 @@ $\sigma$や$C$を変えながら訓練誤差と汎化誤差の振る舞い振い
 Sig <- c(0.2,0.4,0.8,4)
 Const <- c(1,10, 100,1000,10000)
 
+#sapply関数:svm.rdf関数に対して,Sig[i]のデータとConstの5つの数値を適用する.得られる結果はList形式で与えられる.
+#svm.rdf関数では訓練データに対する誤り率, テストデータに対する誤り率を計算するため各outputは10個のListとなる.
+
 out.s1 <- sapply(Const,svm.rbf, sig=Sig[1] )
 out.s2 <- sapply(Const,svm.rbf, sig=Sig[2] )
 out.s3 <- sapply(Const,svm.rbf, sig=Sig[3] )
@@ -307,12 +339,11 @@ matplot(0:4,t(result), type="o", xlab="log10(C))", ylab="error rate")
 ```
 
 
-$\sigma$の値が小さくなるとカーネル関数が狭くなり, 個々のサポートベクトルが独立に識別境界を決めるようになるので, 複雑な識別境界を構成できるようになる. その半面, 学習データに強く適合してしまうため, 汎化誤差は大きい
+$\sigma$の値が小さくなるとカーネル関数が狭くなり, 個々のサポートベクトルが独立に識別境界を決めるようになるので, 複雑な識別境界を構成できるようになる. その半面, 学習データに強く適合してしまうため, 汎化誤差は大きくなる.
 
-$C$の値が大きくなるほど, $\alpha_i$の値が大きくなり, 識別関数の線形結合係数が大きな値を取れるので, 複雑な識別局面が構成できてしまう結果, やはり学習データに強く適合するため汎化誤差が大きくなる. 汎化誤差が一番小さな$C=10, \sigma=0.4$, $C=100, \sigma=0.2$が最適なパラメータであろう. 
+$C$の値が大きくなるほど, $\alpha_i$の値が大きくなり, 識別関数の線形結合係数が大きな値を取れるので, 複雑な識別局面が構成できてしまう結果, やはり学習データに強く適合するため汎化誤差が大きくなる. 汎化誤差が一番小さな$C=10, \sigma=0.4$, $C=100, \sigma=0.2$が最適なパラメータであると考えられる. 
 
 汎化誤差が最小となった場合と, 訓練誤差が最小になった場合のサポートベクトルの分布を図に示す.
-
 
 ```{r ex8.1.d}
 rbf <- rbfdot(sigma=0.4)
@@ -328,4 +359,39 @@ plot(pima.model.train,data=Pima.tr)
 table( predict(pima.model.train, Pima.tr), Pima.tr$type)
 ```
 
+# レポート課題
+ 
+## ロジスティック回帰
+
+今回の例では`Pima.tr`データの7変数を用いて, ロジスティック回帰を行なったが, 幾つの変数を用いるべきか考察せよ.
+必ず理由を記載すること. 用いたコードも添付すること.
+
+## ROC曲線
+
+ROC曲線について調べたことを記入せよ. 解釈の仕方など, 今回の結果を踏まえて作成しても良い.
+
+## サポートベクトルマシン
+
+今回の例では`Pima.tr`の`glu`と`bmi`の2変数を用いて, サポートベクトルマシンによるニ値分類を行なったが, 他の変数を用いて同様の検証を行い, 考察せよ. その際どの変数, パラメータを用いたかを記載し, 必ず理由を記載すること.
+いくつかのパターンを実行し, 何らかの評価指標を用いて選定した場合にはそれらを全て載せても構わない. ただし表などを用いてわかりやすくまとめること. 用いたコードも添付すること.
+
+# レポートの構成
+
+1. 目的（A4一枚程度）
+
+ロジスティック回帰およびサポートベクトルマシンについて, 調べたことなどを書いてください.
+
+2. 授業内課題(1~2)
+
+簡単にまとめてくれればいいです.
+
+3. レポート課題(1~3)
+
+課題内容, 必要に応じて手順, 結果, 考察
+
+4. 感想（重要）
+
+# 注意点
+
+- 質問対応
 
