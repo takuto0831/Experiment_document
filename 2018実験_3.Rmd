@@ -25,13 +25,41 @@ knitr:::opts_chunk$set(cache=TRUE,
 knitr:::opts_knit$set(width=75)
 ```
 
+# 実験準備
+
+## ディレクトリーを変更する.
+
+USB上ではデータを扱わない方がいいです. 配布されたフォルダをデスクトップ上にダウンロードし, 最後に自分のUSBに戻しましょう. ディレクトリ名は各自変更してください.
+
 ```{r setup, echo=FALSE}
-# set working directory
+# mac用
 setwd("~/Desktop/情報工学実験３")
+# windows用
+# setwd("C:User/Desktop/情報工学実験３")
 ```
 
-```{r, echo=FALSE}
-# load packages
+## パッケージのインストール
+
+学科PCは初期化されるため, その都度インストールする必要があります. 以下のコードを実行することで, 必要なパッケージをインストールすることができます. また, 警告文などでパッケージが存在しないと言われた場合, パッケージのインストールが正しく行われているか確認しましょう.
+
+```{r echo=FALSE,eval=FALSE}
+# echo=FALSE: markdownに表示されない, eval = FALSE : markdownで実行されない
+install.packages("tidyverse")
+install.packages("data.table")
+install.packages("moments")
+install.packages("MASS")
+install.packages("class")
+install.packages("kernlab")
+install.packages("xtable")
+install.packages("knitr")
+```
+
+## パッケージの読み込み
+ 
+パッケージはインストールして, 読み込むことで使用できるようになります. 自分のノートPC使用している場合, インストールは一度でいいですが, 読み込みは毎回行う必要があります.
+
+```{r}
+# 必要なパッケージを読み込む.
 library(tidyverse)
 library(data.table)
 library(moments)
@@ -393,5 +421,12 @@ ROC曲線について調べたことを記入せよ. 解釈の仕方など, 今�
 
 # 注意点
 
-- 質問対応
+- 質問対応時間
+
+    - 月曜16:00-17:30 (仮)
+
+- レポート構成について
+
+    - 配布したコードをそのまま貼らないでください.
+    - 必ず自分の言葉で記入してください.
 
