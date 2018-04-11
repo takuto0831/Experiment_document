@@ -10,7 +10,7 @@ output:
     theme: united
 #output:
  # ioslides_presentation:
- # oc: true
+ # toc: true
 ---
 
 ```{r knitr_init, echo=FALSE, cache=FALSE}
@@ -52,6 +52,7 @@ install.packages("class")
 install.packages("kernlab")
 install.packages("xtable")
 install.packages("knitr")
+install.packages("readr") 
 ```
 
 ## パッケージの読み込み
@@ -68,6 +69,15 @@ library(class) # k最近傍法
 library(kernlab) #カーネル法
 library(xtable) # latexで表を出力
 library(knitr) # kable
+library(readr) # csv読み込み用
+```
+
+## データの読み込み
+
+前回配布されたデータを今回も用いる.
+
+```{r}
+
 ```
 
 # 第三回の目的
