@@ -31,7 +31,7 @@ USB上ではデータを扱わない方がいいです. 配布されたフォル
 # mac用
 setwd("~/Desktop/実験資料part3")
 # windows用
-# setwd("C:User/Desktop/情報工学実験３")
+# setwd("C:/Users/ms/Desktop/情報工学実験３")
 ```
 
 ## パッケージのインストール
