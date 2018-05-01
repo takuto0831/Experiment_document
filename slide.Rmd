@@ -29,8 +29,8 @@ USB上ではデータを扱わない方がいいです. 配布されたフォル
 
 ```{r setup}
 # mac用
-setwd("~/Desktop/実験資料part3")
-# windows用
+setwd("~/Desktop/Experiment_doc")
+# 学科pc用
 # setwd("C:/Users/ms/Desktop/情報工学実験３")
 ```
 
@@ -47,7 +47,6 @@ install.packages("MASS")
 install.packages("class")
 install.packages("kernlab")
 install.packages("xtable")
-install.packages("knitr")
 install.packages("readr") 
 ```
 
@@ -63,7 +62,6 @@ library(MASS) #eqscplot, データ
 library(class) # k最近傍法
 library(kernlab) #カーネル法
 library(xtable) # latexで表を出力
-library(knitr) # kable
 ```
 
 ## データの読み込み
@@ -341,13 +339,14 @@ ggplot(plot_d, aes(x=true_positive,y=false_positive)) + # ggplotはデータ, x�
 
 ## ROC曲線の解釈
 
-ROC曲線は, "yes","no"が入り混じることなく現れるデータの場合どのような曲線になるでしょう？ 
-
+---
+# ROC曲線は, "yes","no"が入り混じることなく現れるデータの場合どのような曲線になるでしょう？ 
+---
 一般的に, 予測の正答率を上げていくために, 閾値を移動させると, 誤判別も増えて行きます. 
 
 # サポートベクトルマシン
 
-## サポートベクトルマシンのアルゴリズム(1/4)
+## サポートベクトルマシン(1/4)
 
 サポートベクトルマシンは, 最大マージンを実現する2クラス線形識別関数の学習法である. 最大マージンとは, 学習データの中で最も他のクラスと近い位置にいるもの(サポートベクトル)を基準として, その二つのデータについて, それぞれユークリッド距離が最も大きくなるような位置に識別境界を定めることである.
 
@@ -361,10 +360,18 @@ $$
 
 が成り立つ. 
 
-## サポートベクトルマシンのアルゴリズム(2/4)
+## サポートベクトルマシン(2/4)
 
-ここで,先ほど示した点と平面の公式の分母である$\Vert  \bf{w} \Vert$は両辺にかけて消去している, その結果得られた値をマージン$\kappa$としている.
-係数ベクトルとバイアス項をマージン$\kappa$で正規化したものを改めて$\bf{w}$と$b$と置けば, 線形識別関数は
+$$
+\begin{eqnarray}
+\frac{|\bf{w}^T \bf{x_i} + b|}{ \Vert  \bf{w} \Vert} \geq d 
+&\Leftrightarrow& | \bf{w}^T \bf{x}_i + b| \geq d { \Vert  \bf{w} \Vert} \\
+&\Leftrightarrow& | \bf{w}^T \bf{x}_i + b| \geq \kappa
+\end{eqnarray}
+$$
+
+ここで, $\kappa$は上に示した点と超平面の公式の分母である$\Vert \bf{w} \Vert$を両辺にかけて消去し, 得られた値をマージン$\kappa$としている.
+係数ベクトルとバイアス項をマージン$\kappa$で正規化したものを改めて$\bf{w}$と$b$と置けば, 線形識別関数は$t_i( \bf{w}^T \bf{x}_i + b ) \geq 1$と表すことができ, 
 
 $$
 \begin{aligned}
@@ -375,9 +382,9 @@ $$
 
 となる. 
 
-## サポートベクトルマシンのアルゴリズム(3/4)
+## サポートベクトルマシン(3/4)
 
-この場合分けは$t_i( \bf{w}^T \bf{x}_i + b ) \geq 1$とまとめることができる. クラス間マージンは, 各クラスのデータを$\bf{w}$の方向へ射影した長さの差の最小値(つまり$t_i = +1$のとき$\bf{w}^T \bf{x}_i  + b = 1$となり, $t_i = -1$のとき$\bf{w}^T \bf{x}_i  + b = -1$となるとき)
+クラス間マージンは, 各クラスのデータを$\bf{w}$の方向へ射影した長さの差の最小値(つまり$t_i = +1$のとき$\bf{w}^T \bf{x}_i  + b = 1$となり, $t_i = -1$のとき$\bf{w}^T \bf{x}_i  + b = -1$となるとき)
 
 $$
 \begin{eqnarray}
@@ -391,7 +398,7 @@ $$
 
 で与えられる. 
 
-## サポートベクトルマシンのアルゴリズム(4/4)
+## サポートベクトルマシン(4/4)
 
 最適な超平面の式を$\bf{w}_0^T\bf{x} + b_0=0$とすれば, この超平面は最大クラス間マージン$\rho(\bf{w}_0, b_0) = \max_{w} \rho(\bf{w},b)$を与える. 従って, 最適識別超平面は, $t_i(\bf{w}^T \bf{x}_i+ b)\geq 1$の制約下で, $\bf{w}$のノルムを最小にする解$\bf{w}_0 = \min  \Vert  \bf{w} \Vert$としてもとめることができる.
 
@@ -428,7 +435,8 @@ pred.te <- predict(pima.model,test) #テストデータに対する実行
 ## モデルの可視化
 
 ```{r}
-plot(pima.model)
+# 黒い点はサポートベクター??
+plot(pima.model,data = train)
 ```
 
 ## 自動化
@@ -504,13 +512,20 @@ pima.model2 <- ksvm(type~ bmi+glu ,data=train,type="C-svc",
 plot(pima.model2,data=train)
 ```
 
-## クロス集計表
+## 訓練データに対するクロス集計表
 
 訓練誤差が最小の場合, 汎化誤差が最小の場合についてクロス集計表を作成する.
 
 ```{r}
-table( predict(pima.model1, train), train$type)
-table( predict(pima.model2, train), train$type)
+table(predict(pima.model1, train), train$type)
+table(predict(pima.model2, train), train$type)
+```
+
+## テストデータに対するクロス集計表
+
+```{r}
+table(predict(pima.model1, test), test$type)
+table(predict(pima.model2, test), test$type)
 ```
 
 # レポート課題
