@@ -132,7 +132,7 @@ $$
 (ヒント: 係数ベクトル$\bf{w}$, 特徴ベクトル$\bf{x_i}$, バイアス項$b$とする)
 
 
-## 回答
+## 解答
 
 係数ベクトル$\bf{w}$, 特徴ベクトル$\bf{x_i}$, バイアス項$b$として, 
 
@@ -227,7 +227,7 @@ summary(logit.fit1)$coefficients
 
 - Std.Error : 標準誤差
 
-- Pr : P値のことで, この値が偶然出現した確率
+- Pr : p値, 係数$\beta_j = 0$ の帰無仮説の下で, 推定されたパラメータの値が観測される確率. p値が小さいほど, 係数の推定値が0であるという帰無仮説が実現し得ないことを意味している.
 
 ## 結果の解釈(2/2)
 
@@ -259,16 +259,16 @@ $$
 summary(logit.fit1)$coefficients
 ```
 
-## クロス集計表
+## 混同行列(Confusion matrix)
 
-学習データから, 誤り率と分類評価指標を求めてみよう. 元データの数値を用いて, 得られたパラメータにより線形識別関数を計算する.
+学習データから, 誤り率と分類評価指標を求めてみる.
 
 ```{r}
 pred.ln.logit <- predict(logit.fit1) 
 pred.logit <- exp(pred.ln.logit)/(1+ exp(pred.ln.logit)) 
 ```
 
-全てのデータにおける"type"を"No"と仮定し, 線形識別関数を用いて0.5より大きい場合を"Yes"とする. 横軸を真値, 縦軸を予測値としてクロス集計表を作成する.
+全てのデータにおける"type"を"No"と仮定し, 線形識別関数を用いて0.5より大きい場合を"Yes"とする. 横軸を真値, 縦軸を予測値として混同行列(クロス集計表)を作成する.
 
 ```{r logis.c}
 pred.logit.type <- rep("No", 332)
@@ -323,26 +323,26 @@ ROC_ <- ROC_[first:332,]
 本当はYesで、閾値をずらしたときに、予測において正しかった割合, 正しくなかった割合を求める.
 
 ```{r}
-true_positive <- cumsum(ROC_$answer)/sum(ROC_$answer) #cumsum:累積和
-false_positive <- cumsum(ROC_$answer-1) / sum(ROC_$answer-1)
+false_positive <- cumsum(ROC_$answer) / sum(ROC_$answer) #cumsum:累積和
+true_positive <- cumsum(ROC_$answer-1) / sum(ROC_$answer-1)
 ```
+
+false_positive : 偽陽性, true_positive : 真陽性
 
 ## ROC曲線(2/2)
 
 ```{r fig.height=3}
 # 予測が正しい割合と正しくない割合のデータでデータフレームを形成する.
 plot_d <- data.frame(true_positive = true_positive,false_positive = false_positive)
-ggplot(plot_d, aes(x=true_positive,y=false_positive)) + # ggplotはデータ, x軸, y軸を指定する
+ggplot(plot_d, aes(x=false_positive, y=true_positive)) + # ggplotはデータ, x軸, y軸を指定する
   geom_line() + # x軸, y軸を元に直線を引く
   theme_bw() # おまけ
 ```
 
 ## ROC曲線の解釈
 
----
-# ROC曲線は, "yes","no"が入り混じることなく現れるデータの場合どのような曲線になるでしょう？ 
----
-一般的に, 予測の正答率を上げていくために, 閾値を移動させると, 誤判別も増えて行きます. 
+ROC曲線は, 偽陽性率と真陽性率を様々な閾値に対してプロットしたものです. 偽陽性率と真陽性率はトレードオフの関係にあるので, どちらも良くすることはできません.
+様々な動作点（閾値）に対して, 識別器の性能を評価する必要があります.
 
 # サポートベクトルマシン
 
@@ -409,6 +409,7 @@ $$
 動径基底関数を作成し, サポートベクトルマシンによる分類モデルを作る. 動径基底関数とはカーネル関数の一種で, 入力空間のベクトルを特徴空間のベクトルに変換する.
 
 [カーネル関数について](https://qiita.com/sergeant-wizard/items/c5f79adefe5016f4740e)
+[ksvm関数について](http://uc-r.github.io/svm)
 
 ```{r ex8.1.a}
 rbf <- rbfdot(sigma=0.1)
@@ -428,15 +429,23 @@ pred.te <- predict(pima.model,test) #テストデータに対する実行
 
 ```{r}
 1-sum(diag(table ( pred.tr, train$type) ))/332
-
 1-sum(diag(table ( pred.te, test$type) ))/200
 ```
 
-## モデルの可視化
+## モデルの可視化(1/2)
+
+黒い点はサポートベクターを表します. 
 
 ```{r}
-# 黒い点はサポートベクター??
 plot(pima.model,data = train)
+```
+
+## モデルの可視化(2/2)
+
+```{r}
+pima.model_test <- ksvm(type~ bmi+glu,data=train[pima.model@SVindex,],
+                        type="C-svc",kernel=rbf,C=10,prob.model=TRUE)
+plot(pima.model_test,data = train[pima.model@SVindex,])
 ```
 
 ## 自動化
@@ -445,7 +454,7 @@ $\sigma$や$C$を変えながら訓練誤差と汎化誤差の振る舞い振い
 
 ```{r ex8.1.b}
 #2つのパラメータを定める関数
-svm.rbf <-function(sig,Const){
+svm.rbf <-function(sig,Const,id){
   rbf <- rbfdot(sigma=sig)
   ## train a bound constraint support vector machine
   pima.model <- ksvm(type~ bmi+glu ,data=train,type="C-svc",
@@ -455,6 +464,7 @@ svm.rbf <-function(sig,Const){
   ## 誤り率を計算する
   error.tr <- 1-sum(diag(table ( pred.tr, train$type) ))/332
   error.te <- 1-sum(diag(table ( pred.te, test$type) ))/200
+  
   return(list(error.te=error.te, error.tr = error.tr))
 }
 ```
@@ -474,9 +484,13 @@ svm.rdf関数では訓練データに対する誤り率, テストデータに�
 
 ```{r}
 out.s1 <- sapply(Const,svm.rbf, sig=Sig[1] )
+rownames(out.s1) <- c("error.te1","error.tr1")
 out.s2 <- sapply(Const,svm.rbf, sig=Sig[2] )
+rownames(out.s2) <- c("error.te2","error.tr2")
 out.s3 <- sapply(Const,svm.rbf, sig=Sig[3] )
+rownames(out.s3) <- c("error.te3","error.tr3")
 out.s4 <- sapply(Const,svm.rbf, sig=Sig[4] )
+rownames(out.s4) <- c("error.te4","error.tr4")
 result <- rbind(out.s1,out.s2,out.s3,out.s4)
 ```
 
@@ -486,6 +500,21 @@ result <- rbind(out.s1,out.s2,out.s3,out.s4)
 
 ```{r,fig.height=4}
 matplot(0:4,t(result), type="o", xlab="log10(C))", ylab="error rate")
+```
+
+##
+
+```{r}
+t(result) %>% 
+  as.data.frame() %>% 
+  mutate(id = row_number()) %>% 
+  gather(key = "key", value = "value", -id) -> aaa
+aaa$value <- unlist(aaa$value)
+
+ggplot(aaa,aes(x=id, y=value, group = key, colour = key)) +
+  geom_point() +
+  geom_line(aes(lty=key)) +
+  theme_bw() 
 ```
 
 ## 結果の解釈
@@ -512,16 +541,16 @@ pima.model2 <- ksvm(type~ bmi+glu ,data=train,type="C-svc",
 plot(pima.model2,data=train)
 ```
 
-## 訓練データに対するクロス集計表
+## 訓練データに対する混同行列
 
-訓練誤差が最小の場合, 汎化誤差が最小の場合についてクロス集計表を作成する.
+訓練誤差が最小の場合, 汎化誤差が最小の場合について混同行列を作成する.
 
 ```{r}
 table(predict(pima.model1, train), train$type)
 table(predict(pima.model2, train), train$type)
 ```
 
-## テストデータに対するクロス集計表
+## テストデータに対する混同行列
 
 ```{r}
 table(predict(pima.model1, test), test$type)
