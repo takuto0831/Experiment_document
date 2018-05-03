@@ -77,7 +77,7 @@ test <- read.csv("csv/pima_test.csv") # テスト用データ
 
 ## 実験の目的
 
-第三回では, ロジスティック回帰とサポートベクターマシーンについて実験を行う. 
+第三回では, ロジスティック回帰とサポートベクトルマシーンについて実験を行う. 
 今回の基礎となる, ベイズの定理および点と直線の距離の公式について復習する. 簡単に説明するが, もしわからない場合は必ず各自復習し理解した上でレポートに取り組むこと.
 
 # 復習
@@ -434,7 +434,7 @@ pred.te <- predict(pima.model,test) #テストデータに対する実行
 
 ## モデルの可視化(1/2)
 
-黒い点はサポートベクターを表します. 
+黒い点はサポートベクトルを表します. 
 
 ```{r}
 plot(pima.model,data = train)
@@ -464,23 +464,20 @@ svm.rbf <-function(sig,Const,id){
   ## 誤り率を計算する
   error.tr <- 1-sum(diag(table ( pred.tr, train$type) ))/332
   error.te <- 1-sum(diag(table ( pred.te, test$type) ))/200
-  
   return(list(error.te=error.te, error.tr = error.tr))
 }
 ```
 
 ## パラメータチューニング
 
-最適なパラメータを探索する.
+複数のパラメータを用意して, 最適なパラメータを探索する.
 
 ```{r ex8.1.c}
 Sig <- c(0.2,0.4,0.8,4)
 Const <- c(1,10, 100,1000,10000)
 ```
 
-sapply関数:svm.rdf関数に対して,Sig[i]のデータとConstの5つの数値を適用する.得られる結果はList形式で与えられる.
-
-svm.rdf関数では訓練データに対する誤り率, テストデータに対する誤り率を計算するため各outputは10個のListとなる.
+svm.rdf関数では訓練データ, テストデータに対する誤り率を計算する.
 
 ```{r}
 out.s1 <- sapply(Const,svm.rbf, sig=Sig[1] )
@@ -491,30 +488,29 @@ out.s3 <- sapply(Const,svm.rbf, sig=Sig[3] )
 rownames(out.s3) <- c("error.te3","error.tr3")
 out.s4 <- sapply(Const,svm.rbf, sig=Sig[4] )
 rownames(out.s4) <- c("error.te4","error.tr4")
-result <- rbind(out.s1,out.s2,out.s3,out.s4)
+result <- rbind(out.s1,out.s2,out.s3,out.s4) # 縦に並べて結合する.
+```
+
+## データ形成
+
+```{r}
+result <- t(result) %>% # 転置
+  as.data.frame() %>% # データフレーム化
+  mutate(id = row_number()) %>% # x軸となる連番を用意する
+  gather(key = "key", value = "value", -id) # 下記参照
+result$value <- unlist(result$value) # リストをベクトル化
+```
+
+```{r, echo=FALSE, out.width = '75%'}
+knitr::include_graphics("data/gather_example.png")
 ```
 
 ## 結果のプロット
 
-"result"にまとめた, 各結果を番号順にプロットする. 奇数番号はテストデータに対する予測なので全体的に悪くなっている. 
-
-```{r,fig.height=4}
-matplot(0:4,t(result), type="o", xlab="log10(C))", ylab="error rate")
-```
-
-##
-
 ```{r}
-t(result) %>% 
-  as.data.frame() %>% 
-  mutate(id = row_number()) %>% 
-  gather(key = "key", value = "value", -id) -> aaa
-aaa$value <- unlist(aaa$value)
-
-ggplot(aaa,aes(x=id, y=value, group = key, colour = key)) +
-  geom_point() +
-  geom_line(aes(lty=key)) +
-  theme_bw() 
+ggplot(result,aes(x=id, y=value, colour = key)) +
+  geom_point() + geom_line(aes(lty=key)) +
+  labs(x="log10(C))", y="error rate") + theme_bw() 
 ```
 
 ## 結果の解釈
