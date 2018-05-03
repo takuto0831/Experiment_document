@@ -1,7 +1,7 @@
 ---
 title: "情報工学実験3 パターン認識 III"
 date: "`r Sys.Date()`"
-#author: "小坪 琢人"
+author: "Takuto Kotsubo"
 output:
   ioslides_presentation:
     widescreen: true
@@ -404,16 +404,55 @@ $$
 
 `train`との`glu`と`bmi`を用いた2次元データをSVMで識別してみる. RBFカーネルを用いた結果を示す. RBFカーネルにはコストパラメータ$C$とカーネルパラメータ$\sigma$が存在する.動径基底関数の広がりを表すパラメータを$\sigma=0.2, 0.4, 0.8, 2.0,4.0$に設定し, $\alpha_i$の上限値を与えるパラメータ$C$の値を変えたときの訓練誤差(学習データの再代入誤り率)と,  ホールドアウト法による汎化誤差を示している. （教科書と違います）　
 
+## カーネル関数について
+
+入力空間のベクトルを特徴空間に写像し, 特徴空間で線形データ解析を用いる. 対象のデータによって, カーネル関数を変えることで, 良い結果が得られる場合がある. `iris`のデータセットを基に二値分類を行い, カーネル関数ごとに分類曲線がどの様に変化するか確認する.
+
+```{r kernel}
+iris_set <- iris[1:100,c(1,2,5)] # 必要な情報抽出
+model_linear <- ksvm(Species~., data=iris_set, type="C-svc",
+                     kernel="vanilladot",kpar = list(), prob.model=TRUE) # 線形カーネル
+model_gaussian <- ksvm(Species~., data=iris_set, type="C-svc",
+                       kernel="rbfdot",prob.model=TRUE) # 動径基底関数カーネル
+model_poly <- ksvm(Species~., data=iris_set, type="C-svc",
+                   kernel="polydot",kpar = list(degree=2), prob.model=TRUE) # 多項式カーネル
+model_laplace <- ksvm(Species~., data=iris_set, type="C-svc",
+                       kernel="laplacedot",prob.model=TRUE) # ラプラシアンカーネル
+```
+
+## 線形カーネル
+
+黒い点はサポートベクトルを表します.
+
+```{r}
+plot(model_linear,data=iris_set)
+```
+
+## 動径基底関数カーネル
+
+```{r}
+plot(model_gaussian,data=iris_set)
+```
+
+## 多項式カーネル
+
+```{r}
+plot(model_poly,data=iris_set)
+```
+
+## ラプラシアンカーネル
+
+```{r}
+plot(model_laplace,data=iris_set)
+```
+
 ## SVMによる識別
 
-動径基底関数を作成し, サポートベクトルマシンによる分類モデルを作る. 動径基底関数とはカーネル関数の一種で, 入力空間のベクトルを特徴空間のベクトルに変換する.
+動径基底関数を作成し, サポートベクトルマシンによる分類モデルを作る. 
 
-[カーネル関数について](https://qiita.com/sergeant-wizard/items/c5f79adefe5016f4740e)
-[ksvm関数について](http://uc-r.github.io/svm)
-
-```{r ex8.1.a}
-rbf <- rbfdot(sigma=0.1)
-pima.model <- ksvm(type~ bmi+glu ,data=train,type="C-svc",kernel=rbf,C=10,prob.model=TRUE)
+```{r}
+pima.model <- ksvm(type~ bmi+glu ,data=train,type="C-svc",kernel="rbfdot",
+                   kpar = list(sigma=0.1), C=10,prob.model=TRUE)
 ```
 
 得られたモデルを元に, 訓練データとテストデータに対して予測を行う.
@@ -432,34 +471,23 @@ pred.te <- predict(pima.model,test) #テストデータに対する実行
 1-sum(diag(table ( pred.te, test$type) ))/200
 ```
 
-## モデルの可視化(1/2)
-
-黒い点はサポートベクトルを表します. 
+## モデルの可視化
 
 ```{r}
 plot(pima.model,data = train)
-```
-
-## モデルの可視化(2/2)
-
-```{r}
-pima.model_test <- ksvm(type~ bmi+glu,data=train[pima.model@SVindex,],
-                        type="C-svc",kernel=rbf,C=10,prob.model=TRUE)
-plot(pima.model_test,data = train[pima.model@SVindex,])
 ```
 
 ## 自動化
 
 $\sigma$や$C$を変えながら訓練誤差と汎化誤差の振る舞い振いを調べる. $C$はコストパラメータを表し, 小さいほど誤分類を許容する. $\sigma$はカーネルパラメータで, 値が小さいほど, 単純な決定境界となる.
 
-```{r ex8.1.b}
+```{r}
 #2つのパラメータを定める関数
-svm.rbf <-function(sig,Const,id){
-  rbf <- rbfdot(sigma=sig)
+svm.rbf <-function(sig,Const){
   ## train a bound constraint support vector machine
-  pima.model <- ksvm(type~ bmi+glu ,data=train,type="C-svc",
-                     kernel=rbf,C=Const,prob.model=TRUE)
-  pred.tr<- predict(pima.model) 
+  pima.model <- ksvm(type~ bmi+glu ,data=train,type="C-svc",kernel="rbfdot",
+                     kpar = list(sigma=sig),C=Const,prob.model=TRUE)
+  pred.tr <- predict(pima.model) 
   pred.te <- predict(pima.model,test)
   ## 誤り率を計算する
   error.tr <- 1-sum(diag(table ( pred.tr, train$type) ))/332
@@ -507,7 +535,7 @@ knitr::include_graphics("data/gather_example.png")
 
 ## 結果のプロット
 
-```{r}
+```{r, fig.height=4}
 ggplot(result,aes(x=id, y=value, colour = key)) +
   geom_point() + geom_line(aes(lty=key)) +
   labs(x="log10(C))", y="error rate") + theme_bw() 
@@ -522,18 +550,16 @@ $C$の値が大きくなるほど, $\alpha_i$の値が大きくなり, 識別関
 ## 汎化誤差が最小のSVM
 
 ```{r,fig.height=4}
-rbf <- rbfdot(sigma=0.4)
-pima.model1 <- ksvm(type~ bmi+glu ,data=train,type="C-svc",
-                  kernel=rbf,C=10,prob.model=TRUE)
+pima.model1 <- ksvm(type~ bmi+glu, data=train,type="C-svc",kernel="rbfdot",
+                    kpar = list(sigma=0.4), C=10, prob.model=TRUE)
 plot(pima.model1,data= train)
 ```
 
 ## 訓練誤差が最小のSVM
 
 ```{r,fig.height=4}
-rbf <- rbfdot(sigma=4)
-pima.model2 <- ksvm(type~ bmi+glu ,data=train,type="C-svc",
-                  kernel=rbf,C=10000,prob.model=TRUE)
+pima.model2 <- ksvm(type~ bmi+glu, data=train,type="C-svc", kernel="rbfdot",
+                    kpar = list(sigma=4), C=10000, prob.model=TRUE)
 plot(pima.model2,data=train)
 ```
 
