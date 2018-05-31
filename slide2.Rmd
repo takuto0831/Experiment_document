@@ -1,11 +1,12 @@
 ---
 title: "情報工学実験3 パターン認識 III"
-date: "`r Sys.Date()`"
 author: "Takuto Kotsubo"
+date: "`r Sys.Date()`"
 output:
+  beamer_presentation: default
   ioslides_presentation:
-    widescreen: true
-editor_options: 
+    widescreen: yes
+editor_options:
   chunk_output_type: console
 ---
 
@@ -638,8 +639,6 @@ $$\{x_1,t_1\}=\{(−2,−1),−1\}, \{x_2,t_2\}=\{(2,3),1\}$$
     - モノクロの場合はポイントを変えるなどわかるように図示する.
 
 ## 便利な関数
-
-Tex指定はありませんが, 卒論はTexで書く可能性が高いので, 早めに慣れておくと良いと思います.
 
 ```{r,eval=FALSE}
 # Texの表形式を作成してくれる
